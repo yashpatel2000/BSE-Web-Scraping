@@ -5,7 +5,6 @@ Created on Thu Mar 19 14:19:24 2020
 @author: india
 """
 
-
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -13,8 +12,7 @@ import xlsxwriter
 from openpyxl import load_workbook
 import re
 import time
-import numpy as numpy
-
+import matplotlib.pyplot as plt
 
 counter=0
 while True:
@@ -95,9 +93,11 @@ date_listNew=[]
 date_listNew1=[]
 for a in date_list:
     date_listNew.append(a[0:6]+str(" 20"))
+
+print(date_list)
     
 for a in date_listNew:
-    date_object = datetime.strptime(a, '%b %d %y').date()
+    date_object = datetime.strptime(a.strip(), '%b %d %y').date()
     date_listNew1.append(date_object)
     
 time_list = df2['Date and Time'].values.tolist()
@@ -107,7 +107,7 @@ for a in time_list:
     time_listNew.append(a[7:])
     
 for a in time_listNew:
-    time_object = datetime.strptime(a, '%I:%M:%S %p').time()
+    time_object = datetime.strptime(a.strip(), '%I:%M:%S %p').time()
     time_listNew1.append(time_object)
     
 data6=pd.DataFrame(date_listNew1)
@@ -161,13 +161,24 @@ def apply_color(val):
         color='blue'
     
     pre=val
-    return 'color: %s' %color
-        
-    
+    return 'color: %s' %color  
 
 s=df6.style.applymap(apply_color, subset=['BSE Price(₨)'])
 
-writer = pd.ExcelWriter('Final.xlsx', engine='openpyxl')
-s.to_excel(writer, index=False,  sheet_name='Sheet1')
-worksheet = writer.sheets['Sheet1']
-writer.save()
+
+for i in range(0,len(data)*counter,counter):
+    x=list(df6['Date and Time'][i:i+counter])
+    y=list(df6['BSE Price(₨)'][i:i+counter])
+    fig=plt.figure()
+    axes=fig.add_axes([.1,.1,1,1])
+    axes.plot_date(x,y,'r-',marker='*',label=df6['Stock Name'][i])
+    axes.set_title('Stock Prices')
+    axes.set_xlabel('Timeline')
+    axes.set_ylabel('Price')
+    axes.legend()
+    fig.savefig('%s.' %df6['Stock Name'][i],dpi=150,bbox_inches='tight')
+
+writer2 = pd.ExcelWriter('Final.xlsx', engine='openpyxl')
+s.to_excel(writer2, sheet_name='Sheet1')
+worksheet = writer2.sheets['Sheet1']
+writer2.save()
